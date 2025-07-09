@@ -1,11 +1,12 @@
-
 import React, { useState, useEffect } from 'react';
-import { Menu, X, Home, User, Settings, Mail, ShoppingBag } from 'lucide-react';
+import { Menu, X, Home, User, Settings, Mail, ShoppingBag, ShoppingCart } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
+import { useCart } from '../context/CartContext';
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const { cart } = useCart();
   const location = useLocation();
 
   useEffect(() => {
@@ -17,10 +18,10 @@ const Navigation = () => {
   }, []);
 
   const navItems = [
-    { icon: Home, label: 'Accueil', href: '/' },
-    { icon: ShoppingBag, label: 'Boutique', href: '/boutique' },
-    { icon: User, label: 'À propos', href: '/a-propos' },
-    { icon: Mail, label: 'Contact', href: '/contact' },
+    { icon: Home, label: 'Accueil', to: '/' },
+    { icon: ShoppingBag, label: 'Boutique', to: '/boutique' },
+    { icon: User, label: 'À propos', to: '/a-propos' },
+    { icon: Mail, label: 'Contact', to: '/contact' },
   ];
 
   const isActivePath = (path: string) => {
@@ -40,11 +41,9 @@ const Navigation = () => {
           {/* Logo */}
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <Link to="/">
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 via-pink-500 to-cyan-500 bg-clip-text text-transparent">
-                  ModernShop
-                </h1>
-              </Link>
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 via-pink-500 to-cyan-500 bg-clip-text text-transparent">
+                Ze Boutik
+              </h1>
             </div>
           </div>
 
@@ -54,9 +53,9 @@ const Navigation = () => {
               {navItems.map((item, index) => (
                 <Link
                   key={index}
-                  to={item.href}
+                  to={item.to}
                   className={`group relative flex items-center px-4 py-2 text-sm font-medium transition-all duration-300 ${
-                    isActivePath(item.href)
+                    isActivePath(item.to)
                       ? 'text-purple-600'
                       : 'text-gray-600 hover:text-purple-600'
                   }`}
@@ -64,20 +63,23 @@ const Navigation = () => {
                   <item.icon className="w-4 h-4 mr-2 transition-transform group-hover:scale-110" />
                   {item.label}
                   <span className={`absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-purple-500 to-cyan-500 transition-transform duration-300 origin-left ${
-                    isActivePath(item.href) ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'
+                    isActivePath(item.to) ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'
                   }`} />
                 </Link>
               ))}
             </div>
           </div>
 
-          {/* CTA Button */}
+          {/* Remplacer le bouton Commander par le bouton Panier avec compteur */}
           <div className="hidden md:block">
-            <Link
-              to="/commander"
-              className="relative overflow-hidden bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-700 hover:to-cyan-700 text-white px-6 py-2 rounded-full font-medium transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-purple-500/25"
-            >
-              <span className="relative z-10">Commander</span>
+            <Link to="/panier" className="relative overflow-hidden bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-700 hover:to-cyan-700 text-white px-6 py-2 rounded-full font-medium transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-purple-500/25 flex items-center">
+              <ShoppingCart className="w-5 h-5 mr-2" />
+              <span className="relative z-10">Panier</span>
+              {cart.length > 0 && (
+                <span className="ml-2 bg-white text-purple-600 rounded-full px-2 py-0.5 text-xs font-bold">
+                  {cart.length}
+                </span>
+              )}
             </Link>
           </div>
 
@@ -109,24 +111,16 @@ const Navigation = () => {
           {navItems.map((item, index) => (
             <Link
               key={index}
-              to={item.href}
-              className={`flex items-center px-3 py-2 rounded-md text-base font-medium transition-all duration-200 ${
-                isActivePath(item.href)
-                  ? 'text-purple-600 bg-purple-50'
-                  : 'text-gray-600 hover:text-purple-600 hover:bg-gray-50'
-              }`}
+              to={item.to}
+              className="flex items-center px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-purple-600 hover:bg-gray-50 transition-all duration-200"
               onClick={() => setIsOpen(false)}
             >
               <item.icon className="w-5 h-5 mr-3" />
               {item.label}
             </Link>
           ))}
-          <Link
-            to="/commander"
-            className="block w-full mt-4 bg-gradient-to-r from-purple-600 to-cyan-600 text-white px-4 py-2 rounded-full font-medium transition-all duration-300 shadow-lg text-center"
-            onClick={() => setIsOpen(false)}
-          >
-            Commander
+          <Link to="/panier" className="w-full mt-4 bg-gradient-to-r from-purple-600 to-cyan-600 text-white px-4 py-2 rounded-full font-medium transition-all duration-300 shadow-lg text-center block">
+            Panier
           </Link>
         </div>
       </div>

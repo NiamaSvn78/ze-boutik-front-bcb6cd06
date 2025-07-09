@@ -1,89 +1,64 @@
-
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Play, Pause, ShoppingCart, Heart, Star, Filter, Grid, List } from 'lucide-react';
-
-interface Product {
-  id: number;
-  name: string;
-  price: number;
-  originalPrice?: number;
-  image: string;
-  category: string;
-  rating: number;
-  reviewCount: number;
-  audioDescription: string;
-  features: string[];
-  inStock: boolean;
-}
+import { useAirtableProducts } from '../hooks/useAirtableProducts';
+import { AirtableProduct } from '../types/airtable';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Badge } from './ui/badge';
+import { Skeleton } from './ui/skeleton';
+import { EmptyState } from './ui/empty-state';
+import { useCart } from '../context/CartContext';
 
 const Products = () => {
-  const [playingAudio, setPlayingAudio] = useState<number | null>(null);
+  const [playingAudio, setPlayingAudio] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [favorites, setFavorites] = useState<number[]>([]);
+  const [favorites, setFavorites] = useState<string[]>([]);
+  const { addToCart } = useCart();
+  const [selectedProduct, setSelectedProduct] = useState<AirtableProduct | null>(null);
 
-  const products: Product[] = [
-    {
-      id: 1,
-      name: "Smartphone Pro Max",
-      price: 999,
-      originalPrice: 1199,
-      image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400&h=400&fit=crop",
-      category: "Électronique",
-      rating: 4.8,
-      reviewCount: 324,
-      audioDescription: "Découvrez le smartphone le plus avancé avec un écran OLED exceptionnel et une batterie longue durée.",
-      features: ["Écran OLED 6.7\"", "128GB de stockage", "Triple caméra 48MP", "5G Ready", "Charge sans fil"],
-      inStock: true
-    },
-    {
-      id: 2,
-      name: "Casque Audio Premium",
-      price: 299,
-      originalPrice: 399,
-      image: "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=400&h=400&fit=crop",
-      category: "Audio",
-      rating: 4.9,
-      reviewCount: 156,
-      audioDescription: "Plongez dans un son cristallin avec notre casque premium à réduction de bruit active.",
-      features: ["Réduction de bruit active", "30h d'autonomie", "Bluetooth 5.2", "Charge rapide", "Assistant vocal"],
-      inStock: true
-    },
-    {
-      id: 3,
-      name: "Ordinateur Portable Gaming",
-      price: 1499,
-      image: "https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=400&h=400&fit=crop",
-      category: "Informatique",
-      rating: 4.7,
-      reviewCount: 89,
-      audioDescription: "Performance ultime pour les gamers avec processeur dernière génération et carte graphique dédiée.",
-      features: ["Intel i7 12è gen", "RTX 4060", "16GB RAM", "512GB SSD", "Écran 144Hz"],
-      inStock: false
-    },
-    {
-      id: 4,
-      name: "Montre Connectée Sport",
-      price: 249,
-      originalPrice: 329,
-      image: "https://images.unsplash.com/photo-1581090464777-f3220bbe1b8b?w=400&h=400&fit=crop",
-      category: "Accessoires",
-      rating: 4.6,
-      reviewCount: 203,
-      audioDescription: "Suivez votre activité physique avec style grâce à cette montre connectée ultra-complète.",
-      features: ["GPS intégré", "Moniteur cardiaque", "Étanche 50m", "7 jours d'autonomie", "100+ sports"],
-      inStock: true
+  // Récupération des données Airtable avec React Query
+  const { data: products = [], isLoading, error } = useAirtableProducts();
+
+  // Récupération des catégories uniques - DOIT être avant les conditions de retour
+  const categories = useMemo(() => {
+    if (!products) return [];
+    const uniqueCategories = new Set(products.map(p => p.categorie).filter(Boolean));
+    return Array.from(uniqueCategories);
+  }, [products]);
+
+  // Filtrage des produits avec useMemo pour optimiser les performances
+  const filteredProducts = useMemo(() => {
+    let filtered = products;
+
+    // Filtre par catégorie
+    if (selectedCategory !== 'all') {
+      filtered = filtered.filter(product => product.categorie === selectedCategory);
     }
-  ];
 
-  const categories = ['all', 'Électronique', 'Audio', 'Informatique', 'Accessoires'];
+    // Filtre par recherche
+    if (searchTerm.trim()) {
+      const searchLower = searchTerm.toLowerCase();
+      filtered = filtered.filter(product => 
+        product.title.toLowerCase().includes(searchLower) ||
+        product.description?.toLowerCase().includes(searchLower) ||
+        product.categorie?.toLowerCase().includes(searchLower)
+      );
+    }
 
-  const filteredProducts = selectedCategory === 'all' 
-    ? products 
-    : products.filter(product => product.category === selectedCategory);
+    // TRI par catégorie puis alphabétique
+    filtered = filtered.slice().sort((a, b) => {
+      if (a.categorie < b.categorie) return -1;
+      if (a.categorie > b.categorie) return 1;
+      return a.title.localeCompare(b.title);
+    });
 
-  const toggleFavorite = (productId: number) => {
+    return filtered;
+  }, [products, selectedCategory, searchTerm]);
+
+  const toggleFavorite = (productId: string) => {
     setFavorites(prev => 
       prev.includes(productId) 
         ? prev.filter(id => id !== productId)
@@ -91,7 +66,7 @@ const Products = () => {
     );
   };
 
-  const playAudio = (productId: number) => {
+  const playAudio = (productId: string) => {
     if (playingAudio === productId) {
       setPlayingAudio(null);
       // Stop audio logic here
@@ -100,6 +75,50 @@ const Products = () => {
       // Play audio logic here
     }
   };
+
+  const clearFilters = () => {
+    setSelectedCategory('all');
+    setSearchTerm('');
+  };
+
+  // Gestion des états de chargement et d'erreur
+  if (isLoading) {
+    return (
+      <section id="products" className="py-20 bg-gradient-to-b from-white to-gray-50/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <Skeleton className="h-12 w-64 mx-auto mb-4" />
+            <Skeleton className="h-6 w-96 mx-auto" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {[...Array(8)].map((_, i) => (
+              <Card key={i}>
+                <CardContent className="p-4">
+                  <Skeleton className="h-48 w-full mb-4" />
+                  <Skeleton className="h-4 w-3/4 mb-2" />
+                  <Skeleton className="h-3 w-1/2" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section id="products" className="py-20 bg-gradient-to-b from-white to-gray-50/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <EmptyState
+            icon="alert-circle"
+            title="Erreur de chargement"
+            description="Impossible de charger les produits. Veuillez réessayer."
+          />
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section id="products" className="py-20 bg-gradient-to-b from-white to-gray-50/50">
@@ -116,22 +135,87 @@ const Products = () => {
           </p>
         </div>
 
-        {/* Filters & Controls */}
-        <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-          <div className="flex items-center space-x-4">
-            <Filter className="w-5 h-5 text-gray-500" />
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="px-4 py-2 rounded-full border border-gray-200 bg-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-            >
-              <option value="all">Toutes les catégories</option>
-              {categories.slice(1).map(category => (
-                <option key={category} value={category}>{category}</option>
-              ))}
-            </select>
+        {/* Product Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <Card>
+            <CardContent className="p-4 text-center">
+              <div className="text-2xl font-bold text-purple-600">{products.length}</div>
+              <div className="text-sm text-gray-600">Produits</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4 text-center">
+              <div className="text-2xl font-bold text-cyan-600">{categories.length}</div>
+              <div className="text-sm text-gray-600">Catégories</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4 text-center">
+              <div className="text-2xl font-bold text-pink-600">
+                {products.filter(p => p.audio).length}
+              </div>
+              <div className="text-sm text-gray-600">Avec Audio</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4 text-center">
+              <div className="text-2xl font-bold text-green-600">
+                {products.filter(p => p.statut_produit === 'publié').length}
+              </div>
+              <div className="text-sm text-gray-600">Publiés</div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Product Filters */}
+        <div className="mb-8 space-y-4">
+          {/* Search */}
+          <div className="relative">
+            <Input
+              type="text"
+              placeholder="Rechercher un produit..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+            <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
           </div>
 
+          {/* Category Filter */}
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant={selectedCategory === 'all' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setSelectedCategory('all')}
+            >
+              Toutes ({products.length})
+            </Button>
+            {categories.map((category) => (
+              <Button
+                key={category}
+                variant={selectedCategory === category ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setSelectedCategory(category)}
+              >
+                {category} ({products.filter(p => p.categorie === category).length})
+              </Button>
+            ))}
+          </div>
+
+          {/* Clear Filters */}
+          {(searchTerm || selectedCategory !== 'all') && (
+            <Button variant="ghost" size="sm" onClick={clearFilters}>
+              Effacer les filtres
+            </Button>
+          )}
+        </div>
+
+        {/* View Mode Controls */}
+        <div className="flex justify-between items-center mb-8">
+          <div className="text-sm text-gray-600">
+            {filteredProducts.length} produit{filteredProducts.length !== 1 ? 's' : ''} trouvé{filteredProducts.length !== 1 ? 's' : ''}
+            {(searchTerm || selectedCategory !== 'all') && ` (sur ${products.length} total)`}
+          </div>
           <div className="flex items-center space-x-2">
             <button
               onClick={() => setViewMode('grid')}
@@ -157,147 +241,187 @@ const Products = () => {
         </div>
 
         {/* Products Grid */}
-        <div className={`grid gap-6 ${
-          viewMode === 'grid' 
-            ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
-            : 'grid-cols-1'
-        }`}>
-          {filteredProducts.map((product) => (
-            <Card 
-              key={product.id} 
-              className={`group relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-105 border-0 bg-white/80 backdrop-blur-sm ${
-                viewMode === 'list' ? 'flex flex-row' : ''
-              }`}
-            >
-              <div className={`relative ${viewMode === 'list' ? 'w-64 flex-shrink-0' : ''}`}>
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className={`w-full object-cover transition-transform duration-300 group-hover:scale-110 ${
-                    viewMode === 'list' ? 'h-full' : 'h-48'
-                  }`}
-                />
-                
-                {/* Badges */}
-                <div className="absolute top-3 left-3 flex flex-col gap-1">
-                  {product.originalPrice && (
-                    <span className="px-2 py-1 bg-red-500 text-white text-xs font-semibold rounded-full">
-                      -{Math.round((1 - product.price/product.originalPrice) * 100)}%
-                    </span>
-                  )}
-                  {!product.inStock && (
-                    <span className="px-2 py-1 bg-gray-500 text-white text-xs font-semibold rounded-full">
-                      Rupture
-                    </span>
-                  )}
+        {filteredProducts.length === 0 ? (
+          <EmptyState
+            icon="package"
+            title="Aucun produit trouvé"
+            description={
+              searchTerm || selectedCategory !== 'all'
+                ? "Aucun produit ne correspond à vos critères de recherche."
+                : "Aucun produit disponible pour le moment."
+            }
+          />
+        ) : (
+          <div className={`grid gap-6 ${
+            viewMode === 'grid' 
+              ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
+              : 'grid-cols-1'
+          }`}>
+            {filteredProducts.map((product) => (
+              <Card key={product.id} className="relative group hover:shadow-lg transition">
+                <div
+                  onClick={() => setSelectedProduct(product)}
+                  className="cursor-pointer"
+                  style={{ minHeight: 180 }}
+                >
+                  <CardContent>
+                    <div className="font-bold text-lg mb-2">{product.title}</div>
+                    <div className="text-sm text-gray-500 mb-1">{product.categorie}</div>
+                    <div className="text-sm text-gray-700 mb-2">{product.prix ?? 0} €</div>
+                  </CardContent>
                 </div>
-
-                {/* Favorite Button */}
-                <button
-                  onClick={() => toggleFavorite(product.id)}
-                  className="absolute top-3 right-3 p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-md hover:bg-white transition-all duration-200"
+                <Button
+                  className="absolute bottom-4 right-4 z-10"
+                  size="sm"
+                  onClick={e => {
+                    e.stopPropagation();
+                    addToCart({
+                      id: product.id,
+                      nom: product.title,
+                      prix: product.prix ?? 0,
+                      image: product.image,
+                    });
+                  }}
                 >
-                  <Heart 
-                    className={`w-4 h-4 transition-colors ${
-                      favorites.includes(product.id) 
-                        ? 'fill-red-500 text-red-500' 
-                        : 'text-gray-400'
-                    }`} 
-                  />
-                </button>
-
-                {/* Audio Button */}
-                <button
-                  onClick={() => playAudio(product.id)}
-                  className="absolute bottom-3 right-3 p-2 bg-purple-600 text-white rounded-full shadow-md hover:bg-purple-700 transition-all duration-200"
-                >
-                  {playingAudio === product.id ? (
-                    <Pause className="w-4 h-4" />
-                  ) : (
-                    <Play className="w-4 h-4" />
-                  )}
-                </button>
-              </div>
-
-              <div className={`flex-1 ${viewMode === 'list' ? 'p-6' : ''}`}>
-                <CardHeader className={viewMode === 'list' ? 'p-0 pb-4' : ''}>
-                  <div className="flex justify-between items-start mb-2">
-                    <span className="text-sm font-medium text-purple-600 bg-purple-50 px-2 py-1 rounded-full">
-                      {product.category}
-                    </span>
-                    <div className="flex items-center text-sm text-gray-500">
-                      <Star className="w-4 h-4 fill-yellow-400 text-yellow-400 mr-1" />
-                      {product.rating} ({product.reviewCount})
-                    </div>
-                  </div>
-                  <CardTitle className="text-lg font-semibold text-gray-800 group-hover:text-purple-600 transition-colors">
-                    {product.name}
-                  </CardTitle>
-                </CardHeader>
-
-                <CardContent className={viewMode === 'list' ? 'p-0' : 'pb-4'}>
-                  {/* Features */}
-                  <div className="mb-4">
-                    <h4 className="text-sm font-medium text-gray-700 mb-2">Caractéristiques :</h4>
-                    <div className="flex flex-wrap gap-1">
-                      {product.features.slice(0, 3).map((feature, index) => (
-                        <span
-                          key={index}
-                          className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full"
-                        >
-                          {feature}
-                        </span>
-                      ))}
-                      {product.features.length > 3 && (
-                        <span className="text-xs text-gray-500 px-2 py-1">
-                          +{product.features.length - 3} autres
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Price */}
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-2xl font-bold text-gray-900">
-                        {product.price}€
-                      </span>
-                      {product.originalPrice && (
-                        <span className="text-lg text-gray-500 line-through">
-                          {product.originalPrice}€
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Add to Cart Button */}
-                  <button
-                    disabled={!product.inStock}
-                    className={`w-full flex items-center justify-center space-x-2 py-3 px-4 rounded-xl font-semibold transition-all duration-300 ${
-                      product.inStock
-                        ? 'bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-700 hover:to-cyan-700 text-white transform hover:scale-105 shadow-lg hover:shadow-purple-500/25'
-                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    }`}
-                  >
-                    <ShoppingCart className="w-5 h-5" />
-                    <span>{product.inStock ? 'Ajouter au panier' : 'Indisponible'}</span>
-                  </button>
-                </CardContent>
-              </div>
-            </Card>
-          ))}
-        </div>
+                  Commander
+                </Button>
+              </Card>
+            ))}
+          </div>
+        )}
 
         {/* Load More Button */}
         {filteredProducts.length > 0 && (
           <div className="text-center mt-12">
-            <button className="bg-gradient-to-r from-purple-600 via-pink-500 to-cyan-600 hover:from-purple-700 hover:via-pink-600 hover:to-cyan-700 text-white px-8 py-3 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-purple-500/25">
+            <Button className="bg-gradient-to-r from-purple-600 via-pink-500 to-cyan-600 hover:from-purple-700 hover:via-pink-600 hover:to-cyan-700 text-white px-8 py-3 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-purple-500/25">
               Voir plus de produits
-            </button>
+            </Button>
+          </div>
+        )}
+
+        {/* Modale produit */}
+        {selectedProduct && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6 relative">
+              <button
+                className="absolute top-2 right-2 text-gray-400 hover:text-black"
+                onClick={() => setSelectedProduct(null)}
+              >
+                ✕
+              </button>
+              <h2 className="text-2xl font-bold mb-2">{selectedProduct.title}</h2>
+              <div className="mb-2">{selectedProduct.description}</div>
+              <div className="mb-2">Catégorie : {selectedProduct.categorie}</div>
+              <div className="mb-2">Prix : {selectedProduct.prix ?? 0} €</div>
+              <Button
+                onClick={() => {
+                  addToCart({
+                    id: selectedProduct.id,
+                    nom: selectedProduct.title,
+                    prix: selectedProduct.prix ?? 0,
+                    image: selectedProduct.image,
+                  });
+                  setSelectedProduct(null);
+                }}
+              >
+                Ajouter au panier
+              </Button>
+            </div>
           </div>
         )}
       </div>
     </section>
+  );
+};
+
+interface ProductCardProps {
+  product: AirtableProduct;
+  viewMode: 'grid' | 'list';
+  isFavorite: boolean;
+  isPlayingAudio: boolean;
+  onToggleFavorite: (productId: string) => void;
+  onPlayAudio: (productId: string) => void;
+}
+
+const ProductCard: React.FC<ProductCardProps> = ({
+  product,
+  viewMode,
+  isFavorite,
+  isPlayingAudio,
+  onToggleFavorite,
+  onPlayAudio
+}) => {
+  return (
+    <Card className={`group hover:shadow-lg transition-all duration-300 ${
+      viewMode === 'list' ? 'flex' : ''
+    }`}>
+      <CardContent className={`p-4 ${viewMode === 'list' ? 'flex-1 flex' : ''}`}>
+        <div className={`${viewMode === 'list' ? 'flex space-x-4' : ''}`}>
+          {/* Image */}
+          <div className={`relative ${viewMode === 'list' ? 'w-32 h-32 flex-shrink-0' : 'mb-4'}`}>
+            <img
+              src={product.image || '/placeholder.svg'}
+              alt={product.title}
+              className={`w-full h-full object-cover rounded-lg ${
+                viewMode === 'list' ? 'w-32 h-32' : 'h-48'
+              }`}
+            />
+            {product.audio && (
+              <button
+                onClick={() => onPlayAudio(product.id)}
+                className="absolute top-2 right-2 w-8 h-8 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/70 transition-colors"
+              >
+                {isPlayingAudio ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+              </button>
+            )}
+            <button
+              onClick={() => onToggleFavorite(product.id)}
+              className={`absolute top-2 left-2 w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+                isFavorite 
+                  ? 'bg-red-500 text-white' 
+                  : 'bg-white/80 text-gray-600 hover:bg-white'
+              }`}
+            >
+              <Heart className={`w-4 h-4 ${isFavorite ? 'fill-current' : ''}`} />
+            </button>
+          </div>
+
+          {/* Content */}
+          <div className={`${viewMode === 'list' ? 'flex-1' : ''}`}>
+            <div className="flex items-start justify-between mb-2">
+              <h3 className="font-semibold text-gray-900 line-clamp-2">
+                {product.title}
+              </h3>
+            </div>
+
+            {product.categorie && (
+              <Badge variant="secondary" className="mb-2">
+                {product.categorie}
+              </Badge>
+            )}
+
+            {product.description && (
+              <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                {product.description}
+              </p>
+            )}
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <ShoppingCart className="w-4 h-4 text-purple-600" />
+                <span className="text-sm text-gray-600">Commander</span>
+              </div>
+              {product.audio && (
+                <div className="flex items-center space-x-1">
+                  <Play className="w-3 h-3 text-cyan-600" />
+                  <span className="text-xs text-gray-500">Audio</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

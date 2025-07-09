@@ -1,162 +1,313 @@
-
 import React from 'react';
-import Navigation from '../components/Navigation';
-import { Heart, Users, Award, Target } from 'lucide-react';
+import Layout from '../components/Layout';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Badge } from '../components/ui/badge';
+import { Heart, Shield, Truck, Star, Users, Award, Target, Zap, ShoppingBag, Globe, Clock, CheckCircle } from 'lucide-react';
 
-const APropos = () => {
+const APropos: React.FC = () => {
   const values = [
     {
       icon: Heart,
       title: "Passion",
-      description: "Nous sélectionnons chaque produit avec passion et expertise pour vous offrir le meilleur."
+      description: "Nous sommes passionnés par l'excellence et nous mettons tout en œuvre pour vous offrir les meilleurs produits."
     },
     {
-      icon: Users,
-      title: "Communauté",
-      description: "Notre communauté de clients satisfaits est au cœur de tout ce que nous faisons."
-    },
-    {
-      icon: Award,
-      title: "Qualité",
-      description: "Seuls les produits de la plus haute qualité méritent une place dans notre boutique."
+      icon: Shield,
+      title: "Confiance",
+      description: "La confiance de nos clients est notre plus grande récompense. Nous la méritons chaque jour."
     },
     {
       icon: Target,
-      title: "Innovation",
-      description: "Nous restons à la pointe de la technologie pour vous proposer les dernières innovations."
+      title: "Qualité",
+      description: "Nous sélectionnons rigoureusement chaque produit pour garantir une qualité exceptionnelle."
+    },
+    {
+      icon: Users,
+      title: "Service",
+      description: "Notre équipe dévouée est là pour vous accompagner à chaque étape de votre parcours."
+    }
+  ];
+
+  const stats = [
+    { number: "1000+", label: "Clients satisfaits", icon: Users },
+    { number: "500+", label: "Produits sélectionnés", icon: ShoppingBag },
+    { number: "24h", label: "Temps de réponse", icon: Clock },
+    { number: "4.9/5", label: "Note moyenne", icon: Star }
+  ];
+
+  const team = [
+    {
+      name: "Marie Dupont",
+      role: "Fondatrice & CEO",
+      description: "Passionnée d'innovation et d'excellence client depuis plus de 10 ans.",
+      image: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face"
+    },
+    {
+      name: "Thomas Martin",
+      role: "Directeur Commercial",
+      description: "Expert en relations clients et développement commercial.",
+      image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"
+    },
+    {
+      name: "Sophie Bernard",
+      role: "Responsable Qualité",
+      description: "Garante de l'excellence de nos produits et services.",
+      image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face"
     }
   ];
 
   return (
-    <div className="min-h-screen relative">
-      {/* Background gradient overlay */}
-      <div className="fixed inset-0 bg-gradient-to-br from-purple-50/40 via-transparent to-cyan-50/40 pointer-events-none animate-aurora" />
-      
-      {/* Animated particles */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        {[...Array(15)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute animate-float opacity-30"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 10}s`,
-              animationDuration: `${5 + Math.random() * 10}s`
-            }}
-          >
-            <div className="w-1 h-1 bg-gradient-to-r from-purple-300 to-cyan-300 rounded-full" />
-          </div>
-        ))}
-      </div>
-
-      <Navigation />
-      
-      <main className="pt-20 pb-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Hero Section */}
-          <div className="text-center mb-16">
-            <h1 className="text-3xl md:text-5xl font-bold mb-6">
-              <span className="bg-gradient-to-r from-purple-600 via-pink-500 to-cyan-500 bg-clip-text text-transparent">
-                À Propos de ModernShop
-              </span>
-            </h1>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Depuis 2020, nous révolutionnons l'expérience d'achat en ligne avec des produits exceptionnels et un service client inégalé.
-            </p>
-          </div>
-
-          {/* Story Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-20">
-            <div className="space-y-6">
-              <h2 className="text-3xl font-bold text-gray-800">
-                Notre Histoire
-              </h2>
-              <p className="text-gray-600 text-lg leading-relaxed">
-                ModernShop est née d'une vision simple : rendre la technologie accessible à tous. 
-                Fondée par une équipe de passionnés, notre boutique s'est rapidement imposée comme 
-                une référence dans le domaine du e-commerce premium.
+    <Layout>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="text-center mb-16">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-cyan-600 bg-clip-text text-transparent mb-6">
+            À propos de Ze Boutik
+          </h1>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Nous sommes une boutique en ligne passionnée par l'excellence, dédiée à vous offrir une expérience d'achat exceptionnelle avec des produits soigneusement sélectionnés et un service client de qualité.
+          </p>
+        </div>
+        {/* Mission & Vision */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
+          <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+            <CardHeader>
+              <CardTitle className="flex items-center text-purple-900">
+                <Target className="w-6 h-6 mr-2" />
+                Notre Mission
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-purple-800 leading-relaxed">
+                Simplifier votre expérience d'achat en ligne en vous proposant des produits 
+                de qualité, sélectionnés avec soin, et en vous offrant un service client 
+                exceptionnel. Nous croyons que chaque achat doit être une expérience 
+                agréable et satisfaisante.
               </p>
-              <p className="text-gray-600 text-lg leading-relaxed">
-                Aujourd'hui, nous servons des milliers de clients satisfaits à travers le monde, 
-                en proposant une sélection rigoureuse des meilleurs produits technologiques du marché.
-              </p>
-              <div className="flex items-center space-x-8 pt-4">
-                <div className="text-center">
-                  <div className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-cyan-600 bg-clip-text text-transparent">
-                    10K+
-                  </div>
-                  <div className="text-gray-600">Clients satisfaits</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-cyan-600 bg-clip-text text-transparent">
-                    500+
-                  </div>
-                  <div className="text-gray-600">Produits vendus</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-cyan-600 bg-clip-text text-transparent">
-                    4.9/5
-                  </div>
-                  <div className="text-gray-600">Note moyenne</div>
-                </div>
-              </div>
-            </div>
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-600/20 to-cyan-600/20 rounded-2xl transform rotate-6"></div>
-              <img
-                src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=600&h=400&fit=crop"
-                alt="Notre équipe"
-                className="relative rounded-2xl shadow-2xl w-full h-96 object-cover"
-              />
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
-          {/* Values Section */}
-          <div className="mb-20">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-gray-800 mb-4">
-                Nos Valeurs
-              </h2>
-              <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-                Ces valeurs guident chacune de nos décisions et façonnent l'expérience que nous offrons à nos clients.
+          <Card className="bg-gradient-to-br from-cyan-50 to-cyan-100 border-cyan-200">
+            <CardHeader>
+              <CardTitle className="flex items-center text-cyan-900">
+                <Globe className="w-6 h-6 mr-2" />
+                Notre Vision
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-cyan-800 leading-relaxed">
+                Devenir la référence en matière d'e-commerce en France, reconnue pour 
+                notre engagement envers la qualité, l'innovation et la satisfaction client. 
+                Nous aspirons à créer une communauté de clients fidèles qui partagent 
+                nos valeurs.
               </p>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {values.map((value, index) => (
-                <div
-                  key={index}
-                  className="group text-center p-6 bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-                >
-                  <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-purple-600 to-cyan-600 rounded-full mb-4 group-hover:scale-110 transition-transform duration-300">
-                    <value.icon className="w-8 h-8 text-white" />
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Values */}
+        <div className="mb-16">
+          <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
+            Nos Valeurs
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {values.map((value, index) => (
+              <Card key={index} className="text-center hover:shadow-lg transition-shadow duration-300">
+                <CardContent className="p-6">
+                  <div className="w-12 h-12 bg-gradient-to-r from-purple-600 to-cyan-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <value.icon className="w-6 h-6 text-white" />
                   </div>
-                  <h3 className="text-xl font-semibold text-gray-800 mb-3">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
                     {value.title}
                   </h3>
-                  <p className="text-gray-600 leading-relaxed">
+                  <p className="text-gray-600 text-sm">
                     {value.description}
                   </p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Mission Section */}
-          <div className="text-center bg-gradient-to-r from-purple-600 to-cyan-600 rounded-3xl p-12 text-white">
-            <h2 className="text-3xl font-bold mb-6">
-              Notre Mission
-            </h2>
-            <p className="text-xl leading-relaxed max-w-4xl mx-auto">
-              Démocratiser l'accès aux technologies de pointe en proposant des produits exceptionnels, 
-              un service client personnalisé et une expérience d'achat mémorable. Nous croyons que 
-              chacun mérite d'avoir accès aux meilleurs outils pour améliorer sa vie quotidienne.
-            </p>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
-      </main>
-    </div>
+
+        {/* Team */}
+        <div className="mb-16">
+          <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
+            Notre Équipe
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {team.map((member, index) => (
+              <Card key={index} className="text-center">
+                <CardContent className="p-6">
+                  <img
+                    src={member.image}
+                    alt={member.name}
+                    className="w-24 h-24 rounded-full mx-auto mb-4 object-cover"
+                  />
+                  <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                    {member.name}
+                  </h3>
+                  <Badge className="mb-3">
+                    {member.role}
+                  </Badge>
+                  <p className="text-gray-600 text-sm">
+                    {member.description}
+                  </p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+
+        {/* Why Choose Us */}
+        <div className="mb-16">
+          <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
+            Pourquoi nous choisir ?
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-start space-x-4">
+                  <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-2">
+                      Produits de Qualité
+                    </h3>
+                    <p className="text-gray-600 text-sm">
+                      Chaque produit est rigoureusement sélectionné pour garantir 
+                      la meilleure qualité possible.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-start space-x-4">
+                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Truck className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-2">
+                      Livraison Rapide
+                    </h3>
+                    <p className="text-gray-600 text-sm">
+                      Livraison express disponible pour recevoir vos commandes 
+                      en 24-48h.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-start space-x-4">
+                  <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Users className="w-5 h-5 text-purple-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-2">
+                      Service Client
+                    </h3>
+                    <p className="text-gray-600 text-sm">
+                      Une équipe dédiée disponible pour vous accompagner 
+                      à chaque étape.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-start space-x-4">
+                  <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Award className="w-5 h-5 text-yellow-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-2">
+                      Garantie Satisfaction
+                    </h3>
+                    <p className="text-gray-600 text-sm">
+                      Satisfait ou remboursé sous 14 jours. 
+                      Votre satisfaction est notre priorité.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-start space-x-4">
+                  <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Heart className="w-5 h-5 text-red-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-2">
+                      Engagement Éthique
+                    </h3>
+                    <p className="text-gray-600 text-sm">
+                      Nous nous engageons pour un commerce responsable 
+                      et respectueux de l'environnement.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-start space-x-4">
+                  <div className="w-10 h-10 bg-cyan-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Zap className="w-5 h-5 text-cyan-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-2">
+                      Innovation Continue
+                    </h3>
+                    <p className="text-gray-600 text-sm">
+                      Nous améliorons constamment notre plateforme 
+                      pour une expérience optimale.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* Call to Action */}
+        <Card className="bg-gradient-to-r from-purple-600 to-cyan-600 text-white text-center">
+          <CardContent className="p-8">
+            <h2 className="text-2xl font-bold mb-4">
+              Prêt à découvrir nos produits ?
+            </h2>
+            <p className="text-purple-100 mb-6">
+              Rejoignez notre communauté de clients satisfaits et découvrez 
+              notre sélection de produits exceptionnels.
+            </p>
+            <div className="space-x-4">
+              <a
+                href="/boutique"
+                className="inline-block bg-white text-purple-600 px-6 py-3 rounded-full font-semibold hover:bg-gray-100 transition-colors duration-300"
+              >
+                Voir nos produits
+              </a>
+              <a
+                href="/contact"
+                className="inline-block border-2 border-white text-white px-6 py-3 rounded-full font-semibold hover:bg-white hover:text-purple-600 transition-colors duration-300"
+              >
+                Nous contacter
+              </a>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </Layout>
   );
 };
 
